@@ -18,6 +18,11 @@ import com.example.clipforge.data.model.ProjectEntity
 import com.example.clipforge.data.model.Timeline
 import com.example.clipforge.data.model.VideoSegment
 import com.example.clipforge.data.model.WordTiming
+import com.example.clipforge.ai.editing.EditingStylePreset
+import com.example.clipforge.ai.model.QualityScoreReport
+import com.example.clipforge.ai.model.StructuredEditingPlan
+import com.example.clipforge.ai.orchestration.AutonomousEditResult
+import com.example.clipforge.ai.orchestration.AutonomousEditingAgent
 import com.example.clipforge.video.ExportSettings
 import com.example.clipforge.video.VideoExportManager
 import com.example.clipforge.video.VideoMetadataExtractor
@@ -81,6 +86,12 @@ class ClipForgeViewModel(application: Application) : AndroidViewModel(applicatio
 
   private val _lastExportedUri = MutableStateFlow<Uri?>(null)
   val lastExportedUri: StateFlow<Uri?> = _lastExportedUri.asStateFlow()
+
+  private val _lastQualityReport = MutableStateFlow<QualityScoreReport?>(null)
+  val lastQualityReport: StateFlow<QualityScoreReport?> = _lastQualityReport.asStateFlow()
+
+  private val _activePlan = MutableStateFlow<StructuredEditingPlan?>(null)
+  val activePlan: StateFlow<StructuredEditingPlan?> = _activePlan.asStateFlow()
 
   init {
     seedDefaultProvidersIfNeeded()
@@ -319,6 +330,30 @@ class ClipForgeViewModel(application: Application) : AndroidViewModel(applicatio
       _copilotLogs.value = _copilotLogs.value + logMsg
     }
     updateTimeline(updated)
+  }
+
+  fun runAutonomousEdit(
+    userDirective: String,
+    style: EditingStylePreset = EditingStylePreset.VIRAL_PODCAST,
+    onComplete: (AutonomousEditResult) -> Unit = {}
+  ) {
+    viewModelScope.launch {
+      val agent = AutonomousEditingAgent(
+        context = getApplication(),
+        project = _activeProject.value,
+        timeline = _activeTimeline.value
+      )
+      val result = agent.executeAutonomousWorkflow(
+        userRequest = userDirective,
+        clip = _activeClip.value,
+        preferredStyle = style
+      )
+      _lastQualityReport.value = result.qualityReport
+      _activePlan.value = result.editingPlan
+      _copilotLogs.value = _copilotLogs.value + result.executionLog
+      updateTimeline(result.finalTimeline)
+      onComplete(result)
+    }
   }
 
   fun exportActiveClip(settings: ExportSettings, onComplete: (Uri?) -> Unit) {

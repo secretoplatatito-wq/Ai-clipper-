@@ -108,6 +108,7 @@ fun EditorScreen(
   val activeClip by viewModel.activeClip.collectAsState()
   val timeline by viewModel.activeTimeline.collectAsState()
   val copilotLogs by viewModel.copilotLogs.collectAsState()
+  val qualityReport by viewModel.lastQualityReport.collectAsState()
 
   var isPlaying by remember { mutableStateOf(false) }
   var currentPlayheadMs by remember { mutableLongStateOf(0L) }
@@ -566,20 +567,74 @@ fun EditorScreen(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Copilot Log Output
-        Card(
-          colors = CardDefaults.cardColors(containerColor = StudioSurface),
-          shape = RoundedCornerShape(8.dp),
-          modifier = Modifier.fillMaxWidth().height(110.dp)
+        // Autonomous Polish Action Row
+        Row(
+          modifier = Modifier.fillMaxWidth(),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically
         ) {
-          Column(modifier = Modifier.padding(10.dp)) {
-            copilotLogs.takeLast(3).forEach { log ->
-              Text("• $log", color = Color.LightGray, fontSize = 11.sp, modifier = Modifier.padding(vertical = 2.dp))
+          Text("Autonomous AI Director:", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+          Button(
+            onClick = {
+              viewModel.runAutonomousEdit("Apply viral podcast editing with 9:16 speaker tracking, zoom punches, and subtitle highlighting")
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = StudioSecondary),
+            shape = RoundedCornerShape(6.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+          ) {
+            Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Black, modifier = Modifier.size(12.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Auto Edit & QC", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Black)
+          }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Quality Report Card if available
+        qualityReport?.let { qc ->
+          Card(
+            colors = CardDefaults.cardColors(containerColor = StudioSurfaceElevated),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+          ) {
+            Row(
+              modifier = Modifier.fillMaxWidth().padding(8.dp),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically
+            ) {
+              Column {
+                Text("Quality Score: ${qc.overallQuality}/100", color = Color(0xFF10B981), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(
+                  "Story: ${qc.storytellingScore} • Framing: ${qc.visualFramingScore} • Captions: ${qc.captionAccuracyScore}",
+                  color = Color.LightGray,
+                  fontSize = 10.sp
+                )
+              }
+              Box(
+                modifier = Modifier
+                  .background(Color(0xFF10B981).copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                  .padding(horizontal = 8.dp, vertical = 2.dp)
+              ) {
+                Text("Passed", color = Color(0xFF10B981), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+              }
             }
           }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        // Copilot Log Output
+        Card(
+          colors = CardDefaults.cardColors(containerColor = StudioSurface),
+          shape = RoundedCornerShape(8.dp),
+          modifier = Modifier.fillMaxWidth().height(90.dp)
+        ) {
+          Column(modifier = Modifier.padding(8.dp)) {
+            copilotLogs.takeLast(3).forEach { log ->
+              Text("• $log", color = Color.LightGray, fontSize = 11.sp, modifier = Modifier.padding(vertical = 1.dp))
+            }
+          }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         // Natural Language Command Input
         Row(
