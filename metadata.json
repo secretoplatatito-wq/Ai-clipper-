@@ -1,0 +1,6 @@
+{
+  "name": "ClipForge AI",
+  "description": "AI Video Studio — OpusClip & CapCut-inspired intelligent video clipping, smart reframing, viral hook scoring, automated animated captions, and multi-track mobile video editor.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
