@@ -94,7 +94,7 @@ fun ClipResultsScreen(
         .fillMaxSize()
         .padding(innerPadding)
         .padding(horizontal = 16.dp),
-      contentPadding = PaddingValues(top = 10.dp, bottom = 80.dp),
+      contentPadding = PaddingValues(top = 10.dp, bottom = 24.dp),
       verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
       items(clips) { clip ->

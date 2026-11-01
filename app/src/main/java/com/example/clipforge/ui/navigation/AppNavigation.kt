@@ -87,8 +87,7 @@ fun AppNavigation(viewModel: ClipForgeViewModel) {
       if (currentSubScreen == SubScreen.NONE && currentTab != MainTab.EDITOR) {
         NavigationBar(
           containerColor = StudioSurfaceElevated,
-          contentColor = Color.White,
-          modifier = Modifier.navigationBarsPadding()
+          contentColor = Color.White
         ) {
           MainTab.entries.forEach { tab ->
             val isSelected = currentTab == tab
@@ -104,7 +103,8 @@ fun AppNavigation(viewModel: ClipForgeViewModel) {
               label = {
                 Text(
                   tab.label,
-                  fontSize = 10.sp,
+                  fontSize = 11.sp,
+                  fontWeight = if (isSelected) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Normal,
                   color = if (isSelected) StudioSecondary else Color.Gray
                 )
               },
@@ -125,7 +125,7 @@ fun AppNavigation(viewModel: ClipForgeViewModel) {
     Box(
       modifier = Modifier
         .fillMaxSize()
-        .padding(if (currentTab == MainTab.EDITOR || currentSubScreen != SubScreen.NONE) 0.dp else innerPadding.calculateBottomPadding())
+        .padding(bottom = innerPadding.calculateBottomPadding())
     ) {
       when (currentSubScreen) {
         SubScreen.CLIP_RESULTS -> {

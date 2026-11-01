@@ -73,7 +73,7 @@ fun ProjectsScreen(
         onClick = onNewProject,
         containerColor = StudioPrimary,
         contentColor = Color.White,
-        modifier = Modifier.padding(bottom = 70.dp)
+        modifier = Modifier.padding(bottom = 16.dp)
       ) {
         Icon(Icons.Default.Add, contentDescription = "New Project")
       }
@@ -85,7 +85,7 @@ fun ProjectsScreen(
         .fillMaxSize()
         .padding(innerPadding)
         .padding(horizontal = 16.dp),
-      contentPadding = PaddingValues(top = 8.dp, bottom = 120.dp),
+      contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
       if (projects.isEmpty()) {

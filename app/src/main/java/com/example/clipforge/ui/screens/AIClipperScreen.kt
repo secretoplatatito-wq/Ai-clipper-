@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -183,7 +184,12 @@ fun AIClipperScreen(
         Column(modifier = Modifier.padding(16.dp)) {
           Text("Number of Clips to Generate", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
           Spacer(modifier = Modifier.height(8.dp))
-          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
             listOf(3, 5, 10).forEach { count ->
               FilterChip(
                 selected = selectedClipCount == count,
@@ -202,7 +208,12 @@ fun AIClipperScreen(
           Spacer(modifier = Modifier.height(16.dp))
           Text("Preferred Clip Duration", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
           Spacer(modifier = Modifier.height(8.dp))
-          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
             listOf(15, 30, 45, 60).forEach { dur ->
               FilterChip(
                 selected = selectedDurationSec == dur,
@@ -223,14 +234,16 @@ fun AIClipperScreen(
           Spacer(modifier = Modifier.height(8.dp))
           val styles = listOf("Viral moments", "Educational", "Motivational", "Podcast highlights", "Business insights")
           Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            modifier = Modifier
+              .fillMaxWidth()
+              .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
           ) {
-            styles.take(3).forEach { st ->
+            styles.forEach { st ->
               FilterChip(
                 selected = selectedStyle == st,
                 onClick = { selectedStyle = st },
-                label = { Text(st, fontSize = 11.sp) },
+                label = { Text(st, fontSize = 11.sp, fontWeight = FontWeight.Medium) },
                 colors = FilterChipDefaults.filterChipColors(
                   selectedContainerColor = StudioSecondary,
                   selectedLabelColor = Color.Black,

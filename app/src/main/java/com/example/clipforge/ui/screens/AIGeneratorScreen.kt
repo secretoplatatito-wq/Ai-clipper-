@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -100,21 +101,22 @@ fun AIGeneratorScreen(
     ) {
       // Mode selector: Text-to-Video / Image-to-Video
       Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
+        modifier = Modifier
+          .fillMaxWidth()
+          .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
       ) {
         listOf("Text-to-Video", "Image-to-Video", "B-Roll Generator").forEach { mode ->
           FilterChip(
             selected = generationMode == mode,
             onClick = { generationMode = mode },
-            label = { Text(mode, fontSize = 12.sp) },
+            label = { Text(mode, fontSize = 12.sp, fontWeight = FontWeight.SemiBold) },
             colors = FilterChipDefaults.filterChipColors(
               selectedContainerColor = StudioTertiary,
               selectedLabelColor = Color.Black,
               containerColor = StudioSurfaceElevated,
               labelColor = Color.LightGray
-            ),
-            modifier = Modifier.weight(1f)
+            )
           )
         }
       }
@@ -156,12 +158,17 @@ fun AIGeneratorScreen(
           // Parameters: Aspect Ratio & Duration
           Text("Output Aspect Ratio", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
           Spacer(modifier = Modifier.height(6.dp))
-          Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("9:16 Vertical", "16:9 Widescreen", "1:1 Square").forEach { aspect ->
+          Row(
+            modifier = Modifier
+              .fillMaxWidth()
+              .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+          ) {
+            listOf("9:16 Vertical", "16:9 Widescreen", "1:1 Square", "4:5 Social").forEach { aspect ->
               FilterChip(
                 selected = aspectChoice == aspect,
                 onClick = { aspectChoice = aspect },
-                label = { Text(aspect, fontSize = 11.sp) },
+                label = { Text(aspect, fontSize = 11.sp, fontWeight = FontWeight.Medium) },
                 colors = FilterChipDefaults.filterChipColors(
                   selectedContainerColor = StudioPrimary,
                   selectedLabelColor = Color.White,
@@ -281,7 +288,7 @@ fun AIGeneratorScreen(
         }
       }
 
-      Spacer(modifier = Modifier.height(80.dp))
+      Spacer(modifier = Modifier.height(24.dp))
     }
   }
 }
