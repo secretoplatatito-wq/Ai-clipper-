@@ -324,6 +324,69 @@ class ExampleRobolectricTest {
     assertTrue("Should include podcast to shorts preset", presets.any { it.contains("Podcast", ignoreCase = true) })
     assertTrue("Should include gaming moments preset", presets.any { it.contains("Gaming", ignoreCase = true) })
   }
+
+  @Test
+  fun `token usage tracker records tokens and calculates estimated cost`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    com.example.clipforge.ai.usage.TokenUsageTracker.init(context)
+    val initial = com.example.clipforge.ai.usage.TokenUsageTracker.usageStats.value
+
+    com.example.clipforge.ai.usage.TokenUsageTracker.recordUsage(
+      context,
+      provider = "GEMINI",
+      model = "gemini-3.8-flash",
+      inputTokens = 1000L,
+      outputTokens = 500L
+    )
+    val updated = com.example.clipforge.ai.usage.TokenUsageTracker.usageStats.value
+    assertEquals(initial.totalInputTokens + 1000L, updated.totalInputTokens)
+    assertEquals(initial.totalOutputTokens + 500L, updated.totalOutputTokens)
+    assertEquals(initial.totalRequests + 1, updated.totalRequests)
+    assertTrue("Estimated cost should be greater than zero", updated.estimatedCostUsd > 0.0)
+  }
+
+  @Test
+  fun `diagnostic logger redacts sensitive api keys and formats audit report`() {
+    com.example.clipforge.diagnostics.DiagnosticLogger.log(
+      category = com.example.clipforge.diagnostics.LogCategory.AI_ORCHESTRATION,
+      tag = "SecretTest",
+      rawMessage = "Connecting with sk-12345678901234567890abcdef and key AIzaSyA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q"
+    )
+
+    val logs = com.example.clipforge.diagnostics.DiagnosticLogger.logs.value
+    assertTrue("Logs should not be empty", logs.isNotEmpty())
+    val last = logs.first()
+    assertTrue("API key should be redacted", !last.message.contains("AIzaSyA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q"))
+    assertTrue("Contains REDACTED token", last.message.contains("[REDACTED]"))
+
+    val report = com.example.clipforge.diagnostics.DiagnosticLogger.exportSanitizedReport()
+    assertTrue("Report must contain header", report.contains("CLIPFORGE AI DIAGNOSTIC AUDIT REPORT"))
+  }
+
+  @Test
+  fun `app settings manager saves and loads user configuration`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    com.example.clipforge.data.local.AppSettingsManager.init(context)
+
+    val customSettings = com.example.clipforge.data.local.AppSettings(
+      defaultAspect = AspectRatioMode.SQUARE_1_1,
+      defaultCaptionStyle = CaptionStyle.KARAOKE_POP,
+      defaultExportResolution = "720p",
+      exportBitrateMbps = 8,
+      autoFaceTracking = false,
+      lowMemoryMode = true,
+      aiTemperature = 0.4f
+    )
+
+    com.example.clipforge.data.local.AppSettingsManager.updateSettings(context, customSettings)
+    val loaded = com.example.clipforge.data.local.AppSettingsManager.settings.value
+    assertEquals(AspectRatioMode.SQUARE_1_1, loaded.defaultAspect)
+    assertEquals(CaptionStyle.KARAOKE_POP, loaded.defaultCaptionStyle)
+    assertEquals(8, loaded.exportBitrateMbps)
+    assertEquals(false, loaded.autoFaceTracking)
+    assertEquals(true, loaded.lowMemoryMode)
+  }
 }
+
 
 

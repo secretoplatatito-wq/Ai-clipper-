@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.Movie
@@ -69,7 +70,8 @@ fun DashboardScreen(
   onNavigateToClipper: () -> Unit,
   onNavigateToEditor: () -> Unit,
   onNavigateToGenerator: () -> Unit,
-  onNavigateToProviders: () -> Unit
+  onNavigateToProviders: () -> Unit,
+  onNavigateToDiagnostics: () -> Unit = {}
 ) {
   val projects by viewModel.projects.collectAsState()
   val providers by viewModel.aiProviders.collectAsState()
@@ -112,13 +114,22 @@ fun DashboardScreen(
           }
         },
         actions = {
+          IconButton(onClick = onNavigateToDiagnostics) {
+            Icon(
+              Icons.Default.Build,
+              contentDescription = "System Diagnostics",
+              tint = StudioSecondary
+            )
+          }
           IconButton(onClick = onNavigateToProviders) {
             Icon(Icons.Default.Settings, contentDescription = "AI Providers", tint = Color.LightGray)
           }
         },
+
         colors = TopAppBarDefaults.topAppBarColors(containerColor = StudioBackground)
       )
     },
+
     containerColor = StudioBackground
   ) { innerPadding ->
     LazyColumn(

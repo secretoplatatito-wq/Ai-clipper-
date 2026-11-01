@@ -41,6 +41,7 @@ import com.example.clipforge.ui.screens.DashboardScreen
 import com.example.clipforge.ui.screens.EditorScreen
 import com.example.clipforge.ui.screens.ExportScreen
 import com.example.clipforge.ui.screens.ProjectsScreen
+import com.example.clipforge.ui.screens.SystemDiagnosticsScreen
 import com.example.clipforge.ui.theme.StudioBackground
 import com.example.clipforge.ui.theme.StudioPrimary
 import com.example.clipforge.ui.theme.StudioSecondary
@@ -63,7 +64,8 @@ enum class SubScreen {
   NONE,
   CLIP_RESULTS,
   PROVIDERS_SETTINGS,
-  EXPORT_PROGRESS
+  EXPORT_PROGRESS,
+  SYSTEM_DIAGNOSTICS
 }
 
 @Composable
@@ -151,6 +153,12 @@ fun AppNavigation(viewModel: ClipForgeViewModel) {
             onNavigateBack = { currentSubScreen = SubScreen.NONE }
           )
         }
+        SubScreen.SYSTEM_DIAGNOSTICS -> {
+          SystemDiagnosticsScreen(
+            viewModel = viewModel,
+            onNavigateBack = { currentSubScreen = SubScreen.NONE }
+          )
+        }
         SubScreen.NONE -> {
           when (currentTab) {
             MainTab.HOME -> {
@@ -159,9 +167,11 @@ fun AppNavigation(viewModel: ClipForgeViewModel) {
                 onNavigateToClipper = { currentTab = MainTab.CLIPPER },
                 onNavigateToEditor = { currentTab = MainTab.EDITOR },
                 onNavigateToGenerator = { currentTab = MainTab.GENERATOR },
-                onNavigateToProviders = { currentSubScreen = SubScreen.PROVIDERS_SETTINGS }
+                onNavigateToProviders = { currentSubScreen = SubScreen.PROVIDERS_SETTINGS },
+                onNavigateToDiagnostics = { currentSubScreen = SubScreen.SYSTEM_DIAGNOSTICS }
               )
             }
+
             MainTab.CLIPPER -> {
               AIClipperScreen(
                 viewModel = viewModel,

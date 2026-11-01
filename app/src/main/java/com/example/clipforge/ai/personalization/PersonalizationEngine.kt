@@ -88,4 +88,9 @@ object PersonalizationEngine {
     val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     prefs.edit().clear().apply()
   }
+
+  fun resetProfile(context: Context) {
+    resetToDefaults(context)
+  }
 }
+

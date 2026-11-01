@@ -105,10 +105,17 @@ object ReliabilitySubsystem {
       }
     }
 
+    fun cacheSize(): Int = cache.size()
+
     fun clear() {
       cache.evictAll()
     }
+
+    fun evictAll() {
+      cache.evictAll()
+    }
   }
+
 
   // 4. Crash Recovery & Timeline Checkpoint Persistence
   object CheckpointManager {

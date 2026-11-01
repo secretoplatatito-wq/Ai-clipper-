@@ -35,6 +35,10 @@ import com.example.clipforge.ai.personalization.PersonalAIProfile
 import com.example.clipforge.ai.workflow.AIWorkflowStudio
 import com.example.clipforge.ai.workflow.WorkflowStepItem
 import com.example.clipforge.ai.workflow.WorkflowExecutionResult
+import com.example.clipforge.ai.usage.TokenUsageTracker
+import com.example.clipforge.data.local.AppSettingsManager
+import com.example.clipforge.diagnostics.DiagnosticLogger
+import com.example.clipforge.diagnostics.LogCategory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -117,8 +121,16 @@ class ClipForgeViewModel(application: Application) : AndroidViewModel(applicatio
   val isWorkflowRunning: StateFlow<Boolean> = _isWorkflowRunning.asStateFlow()
 
   init {
+    TokenUsageTracker.init(application)
+    AppSettingsManager.init(application)
+    DiagnosticLogger.log(LogCategory.SYSTEM, "ClipForgeViewModel", "ViewModel initialized with token tracking and app settings")
     seedDefaultProvidersIfNeeded()
   }
+
+  fun refreshPersonalProfile() {
+    _personalProfile.value = PersonalizationEngine.loadProfile(getApplication())
+  }
+
 
   private fun seedDefaultProvidersIfNeeded() {
     viewModelScope.launch {
