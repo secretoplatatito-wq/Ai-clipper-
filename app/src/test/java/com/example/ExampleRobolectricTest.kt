@@ -266,5 +266,64 @@ class ExampleRobolectricTest {
     assertTrue("Execution log should record steps", result.executionLog.isNotEmpty())
     assertTrue("Quality report should be generated", result.qualityReport.overallQuality >= 70)
   }
+
+  @Test
+  fun `device capability manager inspects memory and performance mode`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val report = com.example.clipforge.video.DeviceCapabilityManager.inspectDevice(context)
+
+    assertNotNull("Hardware report must not be null", report)
+    assertTrue("RAM must be greater than zero", report.totalRamMb > 0)
+    assertNotNull("Recommended performance mode must exist", report.recommendedPerformanceMode)
+    assertTrue("Preview width must be positive", report.recommendedPreviewWidth > 0)
+  }
+
+  @Test
+  fun `reliability subsystem validates storage and frame cache`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val availSpace = com.example.clipforge.video.ReliabilitySubsystem.checkAvailableStorageMb(context)
+    assertTrue("Storage should be positive", availSpace > 0)
+
+    val hasSpace = com.example.clipforge.video.ReliabilitySubsystem.hasSufficientSpaceForExport(context, 50L)
+    assertTrue("Device should have sufficient space for 50MB export", hasSpace)
+
+    // Checkpoint persistence
+    com.example.clipforge.video.ReliabilitySubsystem.CheckpointManager.saveCheckpoint(context, "test_proj_p1", "{\"dummy\": true}")
+    val recovered = com.example.clipforge.video.ReliabilitySubsystem.CheckpointManager.readCheckpoint(context, "test_proj_p1")
+    assertEquals("{\"dummy\": true}", recovered)
+    com.example.clipforge.video.ReliabilitySubsystem.CheckpointManager.clearCheckpoint(context, "test_proj_p1")
+  }
+
+  @Test
+  fun `personalization engine persists profile and records feedback`() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val initial = com.example.clipforge.ai.personalization.PersonalizationEngine.loadProfile(context)
+    assertNotNull("Initial profile must exist", initial)
+
+    val customProfile = initial.copy(
+      pace = com.example.clipforge.ai.personalization.EditingPace.FAST_PACED,
+      zoomIntensity = com.example.clipforge.ai.personalization.ZoomIntensity.DYNAMIC,
+      brandHighlightColorHex = "#FF4400"
+    )
+    com.example.clipforge.ai.personalization.PersonalizationEngine.saveProfile(context, customProfile)
+    val loaded = com.example.clipforge.ai.personalization.PersonalizationEngine.loadProfile(context)
+    assertEquals(com.example.clipforge.ai.personalization.EditingPace.FAST_PACED, loaded.pace)
+    assertEquals(com.example.clipforge.ai.personalization.ZoomIntensity.DYNAMIC, loaded.zoomIntensity)
+    assertEquals("#FF4400", loaded.brandHighlightColorHex)
+
+    // Feedback recording
+    com.example.clipforge.ai.personalization.PersonalizationEngine.recordClipDecision(context, accepted = true)
+    val updatedWithFeedback = com.example.clipforge.ai.personalization.PersonalizationEngine.loadProfile(context)
+    assertEquals(1, updatedWithFeedback.totalAcceptedClips)
+  }
+
+  @Test
+  fun `ai workflow studio presets are defined and available`() {
+    val presets = com.example.clipforge.ai.workflow.AIWorkflowStudio.getPresetPipelines()
+    assertTrue("Preset pipelines should not be empty", presets.isNotEmpty())
+    assertTrue("Should include podcast to shorts preset", presets.any { it.contains("Podcast", ignoreCase = true) })
+    assertTrue("Should include gaming moments preset", presets.any { it.contains("Gaming", ignoreCase = true) })
+  }
 }
+
 

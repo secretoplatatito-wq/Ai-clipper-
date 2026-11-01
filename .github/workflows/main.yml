@@ -23,21 +23,53 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
-      - name: Validate Gradle Wrapper / Toolchain
+      - name: Prepare Build Environment & Keystore
         run: |
+          # Ensure .env exists for Secrets Gradle Plugin
+          touch .env
+          if [ -f .env.example ]; then
+            cp -n .env.example .env || true
+          fi
+
+          # Ensure debug.keystore exists (from base64 or fallback keytool)
+          if [ ! -f debug.keystore ] && [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore || true
+          fi
+          if [ ! -f debug.keystore ]; then
+            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US" || true
+          fi
+
+          # Ensure gradlew executable
           chmod +x gradlew || true
 
       - name: Run Unit & Robolectric Tests
         run: |
-          ./gradlew :app:testDebugUnitTest --no-daemon || gradle :app:testDebugUnitTest --no-daemon
+          ./gradlew :app:testDebugUnitTest --no-daemon --stacktrace || gradle :app:testDebugUnitTest --no-daemon --stacktrace
 
       - name: Assemble Debug APK
         run: |
-          ./gradlew :app:assembleDebug --no-daemon || gradle :app:assembleDebug --no-daemon
+          ./gradlew :app:assembleDebug --no-daemon --stacktrace || gradle :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Prepare APK Output
+        run: |
+          mkdir -p build-outputs
+          if [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+            cp app/build/outputs/apk/debug/app-debug.apk build-outputs/ClipForge-AI-debug.apk
+          fi
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ClipForge-AI-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            build-outputs/ClipForge-AI-debug.apk
           if-no-files-found: error
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: app/build/reports/tests/
+          if-no-files-found: ignore

@@ -27,6 +27,14 @@ import com.example.clipforge.video.ExportSettings
 import com.example.clipforge.video.VideoExportManager
 import com.example.clipforge.video.VideoMetadataExtractor
 import com.example.clipforge.video.VideoTrimmer
+import com.example.clipforge.video.DeviceCapabilityManager
+import com.example.clipforge.video.DeviceHardwareReport
+import com.example.clipforge.video.ReliabilitySubsystem
+import com.example.clipforge.ai.personalization.PersonalizationEngine
+import com.example.clipforge.ai.personalization.PersonalAIProfile
+import com.example.clipforge.ai.workflow.AIWorkflowStudio
+import com.example.clipforge.ai.workflow.WorkflowStepItem
+import com.example.clipforge.ai.workflow.WorkflowExecutionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -92,6 +100,21 @@ class ClipForgeViewModel(application: Application) : AndroidViewModel(applicatio
 
   private val _activePlan = MutableStateFlow<StructuredEditingPlan?>(null)
   val activePlan: StateFlow<StructuredEditingPlan?> = _activePlan.asStateFlow()
+
+  // Hardware & Reliability State
+  private val _hardwareReport = MutableStateFlow(DeviceCapabilityManager.inspectDevice(application))
+  val hardwareReport: StateFlow<DeviceHardwareReport> = _hardwareReport.asStateFlow()
+
+  // Personalization Engine State
+  private val _personalProfile = MutableStateFlow(PersonalizationEngine.loadProfile(application))
+  val personalProfile: StateFlow<PersonalAIProfile> = _personalProfile.asStateFlow()
+
+  // AI Workflow Studio State
+  private val _workflowSteps = MutableStateFlow<List<WorkflowStepItem>>(emptyList())
+  val workflowSteps: StateFlow<List<WorkflowStepItem>> = _workflowSteps.asStateFlow()
+
+  private val _isWorkflowRunning = MutableStateFlow(false)
+  val isWorkflowRunning: StateFlow<Boolean> = _isWorkflowRunning.asStateFlow()
 
   init {
     seedDefaultProvidersIfNeeded()
@@ -408,6 +431,45 @@ class ClipForgeViewModel(application: Application) : AndroidViewModel(applicatio
     viewModelScope.launch {
       val res = AIProviderManager.testConnection(provider)
       onResult(res)
+    }
+  }
+
+  // Personalization & Reliability Helpers
+  fun refreshHardwareReport() {
+    _hardwareReport.value = DeviceCapabilityManager.inspectDevice(getApplication())
+  }
+
+  fun updatePersonalProfile(profile: PersonalAIProfile) {
+    PersonalizationEngine.saveProfile(getApplication(), profile)
+    _personalProfile.value = profile
+  }
+
+  fun recordClipFeedback(accepted: Boolean) {
+    PersonalizationEngine.recordClipDecision(getApplication(), accepted)
+    _personalProfile.value = PersonalizationEngine.loadProfile(getApplication())
+  }
+
+  fun runWorkflowPipeline(
+    pipelineName: String,
+    onComplete: (WorkflowExecutionResult) -> Unit
+  ) {
+    val project = _activeProject.value ?: return
+    viewModelScope.launch {
+      _isWorkflowRunning.value = true
+      val result = AIWorkflowStudio.executePipeline(
+        context = getApplication(),
+        project = project,
+        pipelineName = pipelineName
+      ) { steps ->
+        _workflowSteps.value = steps
+      }
+      _isWorkflowRunning.value = false
+      if (result.success && result.finalClips.isNotEmpty()) {
+        _clips.value = result.finalClips
+        _activeClip.value = result.finalClips.first()
+        result.qualityReport?.let { _lastQualityReport.value = it }
+      }
+      onComplete(result)
     }
   }
 }
